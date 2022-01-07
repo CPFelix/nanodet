@@ -22,6 +22,15 @@ from nanodet.data.transform import Pipeline
 from nanodet.model.arch import build_model
 from nanodet.util import load_model_weight
 
+from nanodet.util import (
+    NanoDetLightningLogger,
+    cfg,
+    convert_old_model,
+    load_config,
+    load_model_weight,
+    mkdir,
+)
+
 
 class Predictor(object):
     def __init__(self, cfg, model_path, logger, device="cuda:0"):
@@ -52,7 +61,7 @@ class Predictor(object):
         img_info["height"] = height
         img_info["width"] = width
         meta = dict(img_info=img_info, raw_img=img, img=img)
-        meta = self.pipeline(meta, self.cfg.data.val.input_size)
+        meta = self.pipeline(meta=meta, dst_shape=self.cfg.data.val.input_size)
         meta["img"] = (
             torch.from_numpy(meta["img"].transpose(2, 0, 1))
             .unsqueeze(0)
@@ -68,3 +77,16 @@ class Predictor(object):
             meta["raw_img"], dets, class_names, score_thres=score_thres, show=True
         )
         print("viz time: {:.3f}s".format(time.time() - time1))
+
+
+if __name__ == "__main__":
+    load_config(cfg, "config/nanodet-plus-m_320_DSMhand_smoke3.yml")
+    model_path = "workspace/nanodet-plus-m_320_DSMhand_smoke3/model_best/nanodet_model_best.pth"
+    logger = NanoDetLightningLogger(cfg.save_dir)
+    pred = Predictor(cfg, model_path, logger)
+
+    imgPath = "/home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/val"
+    for imgname in os.listdir(imgPath):
+        imgfile = os.path.join(imgPath, imgname)
+        pred.inference(imgfile)
+        print("OK")
