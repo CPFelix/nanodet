@@ -80,6 +80,7 @@ data:
       contrast: [0.6, 1.4]
       saturation: [0.5, 1.2]
       normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      #([90.26806, 90.26111, 90.26501], [55.10139, 55.101105, 55.107918])
   val:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/frame-16/test/images
