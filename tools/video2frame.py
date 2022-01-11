@@ -11,7 +11,7 @@ def cut(video_file, target_dir):
     isOpened = cap.isOpened  # 判断是否打开
 
     # 为单张视频，以视频名称所谓文件名，创建文件夹
-    temp = os.path.split(video_file)[-1]
+    # temp = os.path.split(video_file)[-1]
     # dir_name = temp.split('.')[0]
     dir_name = ""
 
@@ -32,7 +32,7 @@ def cut(video_file, target_dir):
             continue
 
         fileName1 = videoname + "_" + str(i) + ".jpg"
-        data = single_pic_store_dir.split("\\")[4].split("-")[1]
+        data = video_file.split("\\")[3].split("-")[1]
         fileName = data + "_" + fileName1
         # fileName = str(i) + ".jpg"
         if (flag == True):
@@ -60,21 +60,27 @@ if __name__ == '__main__':
     # video_file = 'F:\\阜康测试视频\\video\\test\\videos-20220103\\抽烟报警(主驾)\\新B27700_1585.mp4'
     # savePath = video_file.split(".")[0].replace("\\video\\", "\\frame\\") + "\\"
     # cut(video_file, savePath)
-    videoDir = "F:\\阜康测试视频\\video\\test"
+    videoDir = "F:\\阜康公安--试用告警视频\\28-09"
+    saveDir = "F:\\阜康测试视频\\28-09\\"
     i = 0
+    do_list = ["抽烟报警(副驾)", "抽烟报警(后排)", "抽烟报警(主驾)", "接打电话报警(主驾)"]
     for root, dirs, files in os.walk(videoDir):
         for dir in dirs:
             videoDir1 = os.path.join(root, dir)
             for root1, dirs1, files1 in os.walk(videoDir1):
                 for dir1 in dirs1:
-                    videoDir2 = os.path.join(root1, dir1)
-                    for file in os.listdir(videoDir2):
-                        i += 1
-                        videofile = os.path.join(videoDir2, file)
-                        print(videofile)
-                        savePath = videofile.split(".")[0].replace("\\video\\", "\\frame-16\\") + "\\"
-                        # print(savePath)
-                        cut(videofile, savePath)
+                    if dir1 in do_list:
+                        videoDir2 = os.path.join(root1, dir1)
+                        print(videoDir2)
+                        for file in tqdm(os.listdir(videoDir2)):
+                            i += 1
+                            videofile = os.path.join(videoDir2, file)
+                            # print(videofile)
+                            LPR = file.split("_")[0]
+                            # savePath = videofile.split(".")[0].replace("\\video\\", "\\frame-16\\") + "\\"
+                            savePath = saveDir + dir1 + "\\" + LPR + "\\"
+                            # print(savePath)
+                            cut(videofile, savePath)
     print(i)
 
 
