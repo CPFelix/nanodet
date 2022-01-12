@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3
+save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_mosaic
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -67,6 +67,7 @@ data:
     ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
+    load_mosaic: True  # 增加mosaic数据增强
     pipeline:
       perspective: 0.0
       scale: [0.6, 1.4]
