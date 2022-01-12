@@ -272,7 +272,7 @@ def load_mosaic(self, idx):
         labels4.append(labels)
 
     # Concat/clip labels
-    print(labels4)
+    # print(labels4)
     labels4 = np.concatenate(labels4, 0)
     if (isinstance(s, int)):
         for x in (labels4[:, 1:], *segments4):
@@ -306,6 +306,6 @@ def load_mosaic(self, idx):
     # for i in range(labels4.shape[0]):
     #     cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])), (0, 0, 255), 2)
     # cv2.imwrite("/home/chenpengfei/temp/img4_draw.jpg", img4_draw)
-    bbox4 = labels4[:, 1:]
-    labels4 = labels4[:, 0]
+    bbox4 = labels4[:, 1:].astype(np.float32)
+    labels4 = labels4[:, 0].astype(np.int64)
     return img4, labels4, bbox4
