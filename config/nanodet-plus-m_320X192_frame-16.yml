@@ -68,6 +68,7 @@ data:
     ann_path: /home/chenpengfei/dataset/frame-16/test/coco/test.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
+    load_mosaic: True  # 增加mosaic数据增强
     pipeline:
       perspective: 0.0
       scale: [0.6, 1.4]
