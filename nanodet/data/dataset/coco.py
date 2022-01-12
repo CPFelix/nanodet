@@ -178,7 +178,6 @@ class CocoDataset(BaseDataset):
 
 # 增加mosaic数据增强
 def map_newsize(x, h0, w0, w, h, padw=0, padh=0):
-    # Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 0] = x[:, 0] * w / w0 + padw  # top left x
     y[:, 1] = x[:, 1] * h / h0 + padh  # top left y
