@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_mosaic
+save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -67,7 +67,7 @@ data:
     ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
-    load_mosaic: True  # 增加mosaic数据增强
+    load_mosaic: False  # 增加mosaic数据增强
     pipeline:
       perspective: 0.0
       scale: [0.6, 1.4]
@@ -95,19 +95,34 @@ device:
 schedule:
 #  resume:
 #  load_model:
+#  optimizer:
+#    name: AdamW
+#    lr: 0.001
+#    weight_decay: 0.05
+#  warmup:
+#    name: linear
+#    steps: 500
+#    ratio: 0.0001
+#  total_epochs: 300
+#  lr_schedule:
+#    name: CosineAnnealingLR
+#    T_max: 300
+#    eta_min: 0.00005
+#  val_intervals: 10
   optimizer:
-    name: AdamW
-    lr: 0.001
-    weight_decay: 0.05
+    name: SGD
+    lr: 0.01
+    momentum: 0.9
+    weight_decay: 0.0001
   warmup:
     name: linear
-    steps: 500
-    ratio: 0.0001
-  total_epochs: 300
+    steps: 300
+    ratio: 0.1
+  total_epochs: 100
   lr_schedule:
-    name: CosineAnnealingLR
-    T_max: 300
-    eta_min: 0.00005
+    name: MultiStepLR
+    milestones: [ 50,75,90 ]
+    gamma: 0.1
   val_intervals: 10
 grad_clip: 35
 evaluator:
