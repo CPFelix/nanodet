@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR
+save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_mosaic0.5
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -67,18 +67,18 @@ data:
     ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
-    load_mosaic: False  # 增加mosaic数据增强
+    load_mosaic: 0.5  # 增加mosaic数据增强
     pipeline:
-      perspective: 0.0
-      scale: [0.6, 1.4]
-      stretch: [[0.8, 1.2], [0.8, 1.2]]
-      rotation: 0
-      shear: 0
-      translate: 0.2
-      flip: 0.5
-      brightness: 0.2
-      contrast: [0.6, 1.4]
-      saturation: [0.5, 1.2]
+      perspective: 0.0 # 透视or仿射变换
+      scale: [0.6, 1.4] # 放缩
+      stretch: [[0.8, 1.2], [0.8, 1.2]] # 拉伸
+      rotation: 0  # 旋转
+      shear: 0  # 裁剪
+      translate: 0.2  # 平移
+      flip: 0.5  # 左右翻转
+      brightness: 0.2  # 亮度
+      contrast: [0.6, 1.4]  # 对比度
+      saturation: [0.5, 1.2]  # 饱和度
       normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
   val:
     name: CocoDataset
@@ -93,37 +93,37 @@ device:
   workers_per_gpu: 10
   batchsize_per_gpu: 256
 schedule:
-#  resume:
+#  resume: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_280/model_last.ckpt
 #  load_model:
-#  optimizer:
-#    name: AdamW
-#    lr: 0.001
-#    weight_decay: 0.05
-#  warmup:
-#    name: linear
-#    steps: 500
-#    ratio: 0.0001
-#  total_epochs: 300
-#  lr_schedule:
-#    name: CosineAnnealingLR
-#    T_max: 300
-#    eta_min: 0.00005
-#  val_intervals: 10
   optimizer:
-    name: SGD
-    lr: 0.01
-    momentum: 0.9
-    weight_decay: 0.0001
+    name: AdamW
+    lr: 0.001
+    weight_decay: 0.05
   warmup:
     name: linear
-    steps: 300
-    ratio: 0.1
-  total_epochs: 100
+    steps: 500
+    ratio: 0.0001
+  total_epochs: 300
   lr_schedule:
-    name: MultiStepLR
-    milestones: [ 50,75,90 ]
-    gamma: 0.1
+    name: CosineAnnealingLR
+    T_max: 300
+    eta_min: 0.00005
   val_intervals: 10
+#  optimizer:
+#    name: SGD
+#    lr: 0.14
+#    momentum: 0.9
+#    weight_decay: 0.0001
+#  warmup:
+#    name: linear
+#    steps: 400
+#    ratio: 0.1
+#  total_epochs: 500
+#  lr_schedule:
+#    name: MultiStepLR
+#    milestones: [ 300,400,450 ]
+#    gamma: 0.1
+#  val_intervals: 10
 grad_clip: 35
 evaluator:
   name: CocoDetectionEvaluator

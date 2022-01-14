@@ -152,8 +152,8 @@ class CocoDataset(BaseDataset):
         if self.multi_scale:
             input_size = self.get_random_size(self.multi_scale, input_size)
 
-        # 增加mosaic数据增强
-        if self.load_mosaic and self.mode == "train":
+        # 增加mosaic数据增强，并设置概率
+        if ((random.random() < self.load_mosaic) and (self.mode == "train")):
             img4, labels4, bbox4 = load_mosaic(self, idx)
             meta['img_info']['height'] = img4.shape[0]
             meta['img_info']['width'] = img4.shape[1]
@@ -163,7 +163,18 @@ class CocoDataset(BaseDataset):
 
         meta = self.pipeline(self, meta, input_size)
 
+        # #保存预处理后的图片和对应标注
+        # img_draw = meta["img"].copy()
+        # for i, box in enumerate(meta["gt_bboxes"]):
+        #     cv2.rectangle(img_draw, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 0, 255), 2)
+        # imgname = "img_draw_" + str(random.randint(0, 10000)) + ".jpg"
+        # savePath = "/home/chenpengfei/temp/nanodet/"
+        # if not os.path.exists(savePath):
+        #     os.makedirs(savePath)
+        # cv2.imwrite(savePath + imgname, img_draw)
+
         meta["img"] = torch.from_numpy(meta["img"].transpose(2, 0, 1))
+
         return meta
 
     def get_val_data(self, idx):
