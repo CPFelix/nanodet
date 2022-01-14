@@ -68,7 +68,7 @@ data:
     ann_path: /home/chenpengfei/dataset/frame-16/test/coco/test.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
-    load_mosaic: True  # 增加mosaic数据增强
+    load_mosaic: False  # 增加mosaic数据增强
     pipeline:
       perspective: 0.0
       scale: [0.6, 1.4]
@@ -91,7 +91,7 @@ data:
     pipeline:
       normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
 device:
-  gpu_ids: [1,2,3,4] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 64
 schedule:
