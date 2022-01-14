@@ -19,7 +19,7 @@ from typing import Dict, Optional, Tuple
 import cv2
 import numpy as np
 
-
+# https://www.cnblogs.com/happystudyeveryday/p/10547316.html
 def get_flip_matrix(prob=0.5):
     F = np.eye(3)
     if random.random() < prob:
@@ -348,5 +348,12 @@ class ShapeTransform:
                 meta_data["gt_masks"][i] = cv2.warpPerspective(
                     mask, M, dsize=tuple(dst_shape)
                 )
+
+        # img_draw = img.copy()
+        # gt_bboxes = meta_data["gt_bboxes"]
+        # for i in range(gt_bboxes.shape[0]):
+        #     cv2.rectangle(img_draw, (int(gt_bboxes[i][0]), int(gt_bboxes[i][1])), (int(gt_bboxes[i][2]), int(gt_bboxes[i][3])), (0, 0, 255), 2)
+        # imgname = "img_draw" + str(random.randint(0, 10000)) + ".jpg"
+        # cv2.imwrite("/home/chenpengfei/temp/" + imgname, img_draw)
 
         return meta_data
