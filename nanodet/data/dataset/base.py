@@ -55,6 +55,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         use_seg_mask: bool = False,
         use_keypoint: bool = False,
         load_mosaic: bool = False,
+        cut_mosaic: bool = False,
         mode: str = "train",
         multi_scale: Optional[Tuple[float, float]] = None,
     ):
@@ -68,6 +69,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         self.use_seg_mask = use_seg_mask
         self.use_keypoint = use_keypoint
         self.load_mosaic = load_mosaic
+        self.cut_mosaic = cut_mosaic
         self.multi_scale = multi_scale
         self.mode = mode
 

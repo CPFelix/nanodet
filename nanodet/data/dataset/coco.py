@@ -161,6 +161,15 @@ class CocoDataset(BaseDataset):
             meta['gt_labels'] = labels4
             meta['gt_bboxes'] = bbox4
 
+        # 增加cut_mosaic数据增强，并设置概率
+        if ((random.random() < self.cut_mosaic) and (self.mode == "train")):
+            img4, labels4, bbox4 = cut_mosaic(self, idx)
+            meta['img_info']['height'] = img4.shape[0]
+            meta['img_info']['width'] = img4.shape[1]
+            meta['img'] = img4
+            meta['gt_labels'] = labels4
+            meta['gt_bboxes'] = bbox4
+
         meta = self.pipeline(self, meta, input_size)
 
         # #保存预处理后的图片和对应标注
@@ -297,10 +306,146 @@ def load_mosaic(self, idx):
             labels4[:, y_index] = np.clip(y, 0, 2 * s[1], out=y)  # clip when using random_perspective()
     # img4, labels4 = replicate(img4, labels4)  # replicate
 
+    img4_draw = img4.copy()
+    saveDir = "/home/chenpengfei/temp/nanodet_mosaic/"
+    if not os.path.exists(saveDir):
+        os.makedirs(saveDir)
+    for i in range(labels4.shape[0]):
+        if (int(labels4[i][0]) == 0):
+            cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])),
+                          (0, 0, 255), 2)
+        else:
+            cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])),
+                          (255, 0, 0), 2)
+    imagename = "img4_draw_" + str(random.randint(0, 10000)) + ".jpg"
+    cv2.imwrite(saveDir + imagename, img4_draw)
+
+    # Augment
+    # img4, labels4, segments4 = copy_paste(img4, labels4, segments4, p=self.hyp['copy_paste'])
+    #
+    # img4, labels4 = random_perspective(img4, labels4, segments4,
+    #                                    degrees=self.hyp['degrees'],
+    #                                    translate=self.hyp['translate'],
+    #                                    scale=self.hyp['scale'],
+    #                                    shear=self.hyp['shear'],
+    #                                    perspective=self.hyp['perspective'],
+    #                                    border=self.mosaic_border)  # border to remove
+
     # img4_draw = img4.copy()
     # for i in range(labels4.shape[0]):
     #     cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])), (0, 0, 255), 2)
     # cv2.imwrite("/home/chenpengfei/temp/img4_draw.jpg", img4_draw)
+    bbox4 = labels4[:, 1:].astype(np.float32)
+    labels4 = labels4[:, 0].astype(np.int64)
+    return img4, labels4, bbox4
+
+# 判断坐标框大小是否符合要求
+def smallBox(x, pixels):
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    w = y[2] - y[0]
+    h = y[3] - y[1]
+    if ((w < pixels) or (h < pixels)):
+        return False
+    else:
+        return True
+
+
+# 变形版Masoic，每张图裁出中间区域四分之一进行拼接，相比masoic不会减小目标尺寸
+def cut_mosaic(self, idx):
+    # loads images in a 4-mosaic
+
+    labels4, segments4 = [], []
+    s = self.input_size
+    if (isinstance(s, int)):
+        yc, xc = [int(random.uniform(0, s / 2)), int(random.uniform(0, s / 2))]  # mosaic center x, y
+    else:
+        yc, xc = [int(random.uniform(0, s[1] / 2)), int(random.uniform(0, s[0] / 2))]
+        # xc = int(random.uniform(-self.mosaic_border[0], 2 * s[0] + self.mosaic_border[0]))
+        # yc = int(random.uniform(-self.mosaic_border[1], 2 * s[1] + self.mosaic_border[1]))
+    # print(yc, xc)
+    indices = [idx] + random.choices(self.indices, k=3)  # 3 additional image indices
+    for i, index in enumerate(indices):
+        # Load image
+        img, (h0, w0), (h, w) = load_image(self, index)
+
+        part_w = int(w / 2)
+        part_h = int(h / 2)
+        # place img in img4
+        if i == 0:  # top left
+            if (isinstance(s, int)):
+                img4 = np.full((s, s, img.shape[2]), 114, dtype=np.uint8)  # base image with 4 tiles
+            else:
+                img4 = np.full((s[1], s[0], img.shape[2]), 114, dtype=np.uint8)  # base image with 4 tiles
+            x1a, y1a, x2a, y2a = 0, 0, part_w, part_h  # xmin, ymin, xmax, ymax (large image)
+            x1b, y1b, x2b, y2b = xc, yc, xc + part_w, yc + part_h  # xmin, ymin, xmax, ymax (small image)
+        elif i == 1:  # top right
+            x1a, y1a, x2a, y2a = part_w, 0, w, part_h
+            x1b, y1b, x2b, y2b = xc, yc, xc + part_w, yc + part_h
+        elif i == 2:  # bottom left
+            x1a, y1a, x2a, y2a = 0, part_h, part_w, h
+            x1b, y1b, x2b, y2b = xc, yc, xc + part_w, yc + part_h
+        elif i == 3:  # bottom right
+            x1a, y1a, x2a, y2a = part_w, part_h, w, h
+            x1b, y1b, x2b, y2b = xc, yc, xc + part_w, yc + part_h
+        # print("\n----------------------------\n")
+        # print(i)
+        # print(img4.shape)
+        # print(img.shape)
+        # print(y1a, y2a, x1a, x2a, y1b, y2b, x1b, x2b)
+        # print(img4[y1a:y2a, x1a:x2a].shape)
+        # print(img[y1b:y2b, x1b:x2b].shape)
+        # print("----------------------------\n")
+        img4[y1a:y2a, x1a:x2a] = img[y1b:y2b, x1b:x2b]  # img4[ymin:ymax, xmin:xmax]
+        # cv2.imwrite("/home/chenpengfei/temp/" + str(i) + ".jpg", img4)
+        padw = x1a - x1b
+        padh = y1a - y1b
+
+        # Labels
+        labels = []
+        ann = self.get_img_annotation(index).copy()
+        for i,box in enumerate(ann["bboxes"]):
+            label = np.append(ann["labels"][i], box)
+            labels.append(label)
+        labels = np.array(labels)
+        if labels.size > 0:
+            labels[:, 1:] = map_newsize(labels[:, 1:], h0, w0, w, h, padw, padh)  # normalized xywh to pixel xyxy format
+            # 坐标截断，保证不越界
+            x_index = [1, 3]
+            y_index = [2, 4]
+            for index,x in enumerate(labels[:, x_index]):
+                labels[index, x_index] = np.clip(x, x1a, x2a, out=x)  # clip when using random_perspective()
+            for index,y in enumerate(labels[:, y_index]):
+                labels[index, y_index] = np.clip(y, y1a, y2a, out=y)  # clip when using random_perspective()
+
+        else:
+            continue  # 如果没有标注信息则保存在labels4，不然之后concatenate会报错
+        # 增加截断后坐标的大小判断，过小的标注框过滤掉
+        pixels = 5
+        delete_id = []
+        for row in range(labels.shape[0]):
+            if not smallBox(labels[row][1:], pixels):
+                delete_id.append(row)
+        labels = np.delete(labels, delete_id, axis=0)
+
+        labels4.append(labels)
+
+    # Concat/clip labels
+    # print(labels4)
+    labels4 = np.concatenate(labels4, 0)
+    # img4, labels4 = replicate(img4, labels4)  # replicate
+
+    # img4_draw = img4.copy()
+    # saveDir = "/home/chenpengfei/temp/nanodet_cut_mosaic/"
+    # if not os.path.exists(saveDir):
+    #     os.makedirs(saveDir)
+    # for i in range(labels4.shape[0]):
+    #     if (int(labels4[i][0]) == 0):
+    #         cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])), (0, 0, 255), 2)
+    #     else:
+    #         cv2.rectangle(img4_draw, (int(labels4[i][1]), int(labels4[i][2])), (int(labels4[i][3]), int(labels4[i][4])),
+    #                       (255, 0, 0), 2)
+    # imagename = "img4_draw_" + str(random.randint(0, 10000)) + ".jpg"
+    # cv2.imwrite(saveDir + imagename, img4_draw)
 
     # Augment
     # img4, labels4, segments4 = copy_paste(img4, labels4, segments4, p=self.hyp['copy_paste'])
