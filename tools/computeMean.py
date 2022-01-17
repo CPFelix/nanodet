@@ -29,5 +29,5 @@ if __name__ == "__main__":
     # config_file = "config/nanodet-plus-m_320X192_frame-16.yml"
     # load_config(cfg, config_file)
     # train_dataset = build_dataset(cfg.data.train, "train")
-    train_dataset = Datasat.ImageFolder(root="/home/chenpengfei/dataset/frame-16/test/1", transform=torchvision.transforms.ToTensor())
+    train_dataset = Datasat.ImageFolder(root="/home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images", transform=torchvision.transforms.ToTensor())
     print(getStat(train_dataset))

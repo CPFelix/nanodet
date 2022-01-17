@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_mosaic0.5
+save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_cut_mosaic0.5
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -67,7 +67,8 @@ data:
     ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
-    load_mosaic: 0.5  # 增加mosaic数据增强
+    load_mosaic: 0.0  # 增加mosaic数据增强
+    cut_mosaic: 0.5  # 变形版mosaic
     pipeline:
       perspective: 0.0 # 透视or仿射变换
       scale: [0.6, 1.4] # 放缩
@@ -79,7 +80,8 @@ data:
       brightness: 0.2  # 亮度
       contrast: [0.6, 1.4]  # 对比度
       saturation: [0.5, 1.2]  # 饱和度
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      #normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
   val:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/val
@@ -87,9 +89,10 @@ data:
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      #normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
 device:
-  gpu_ids: [3,4,5,6] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [1,2,3,4] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 256
 schedule:
