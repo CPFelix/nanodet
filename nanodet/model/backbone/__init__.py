@@ -22,6 +22,8 @@ from .repvgg import RepVGG
 from .resnet import ResNet
 from .shufflenetv2 import ShuffleNetV2
 
+from .convnext import ConvNeXt
+
 
 def build_backbone(cfg):
     backbone_cfg = copy.deepcopy(cfg)
@@ -40,5 +42,7 @@ def build_backbone(cfg):
         return CustomCspNet(**backbone_cfg)
     elif name == "RepVGG":
         return RepVGG(**backbone_cfg)
+    elif name == "ConvNeXt":
+        return ConvNeXt(**backbone_cfg)
     else:
         raise NotImplementedError
