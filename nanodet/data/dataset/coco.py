@@ -420,11 +420,16 @@ def cut_mosaic(self, idx):
         else:
             continue  # 如果没有标注信息则保存在labels4，不然之后concatenate会报错
         # 增加截断后坐标的大小判断，过小的标注框过滤掉
-        pixels = 5
+        pixels_hand = 10
+        pixels_cigarette = 2
         delete_id = []
         for row in range(labels.shape[0]):
-            if not smallBox(labels[row][1:], pixels):
-                delete_id.append(row)
+            if (labels[row][0] == 0):
+                if not smallBox(labels[row][1:], pixels_hand):
+                    delete_id.append(row)
+            else:
+                if not smallBox(labels[row][1:], pixels_cigarette):
+                    delete_id.append(row)
         labels = np.delete(labels, delete_id, axis=0)
 
         labels4.append(labels)
