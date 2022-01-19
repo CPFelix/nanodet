@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3
+save_dir: workspace/test
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -16,14 +16,9 @@ model:
     backbone:
       name: ConvNeXt
       out_stages: [1,2,3]
-#    backbone:
-#      name: ShuffleNetV2
-#      model_size: 1.0x
-#      out_stages: [ 2,3,4 ]
-#      activation: LeakyReLU
+      depths: [2,2,2,2]
     fpn:
       name: GhostPAN
-#      in_channels: [116, 232, 464]
       in_channels: [192, 384, 768]
       out_channels: 96
       kernel_size: 5
@@ -94,7 +89,7 @@ data:
     pipeline:
       normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
 device:
-  gpu_ids: [] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 64
 schedule:
