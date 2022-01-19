@@ -15,6 +15,12 @@ from nanodet.util.path import mkdir
 image_ext = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 video_ext = ["mp4", "mov", "avi", "mkv"]
 
+# cuda同步时间
+def time_sync():
+    # pytorch-accurate time
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+    return time.time()
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -103,13 +109,20 @@ def main():
     logger.log('Press "Esc", "q" or "Q" to exit.')
     current_time = time.localtime()
     if args.demo == "image":
+        # 计算推理时间
+        totalTime = 0.0
         if os.path.isdir(args.path):
             files = get_image_list(args.path)
         else:
             files = [args.path]
         files.sort()
         for image_name in files:
+            # 计算推理时间
+            t1 = time_sync()
             meta, res = predictor.inference(image_name)
+            # 计算推理时间
+            t2 = time_sync()
+            totalTime += (t2 - t1) * 1000.0
             result_image = predictor.visualize(res[0], meta, cfg.class_names, 0.35)
             if args.save_result:
                 save_folder = os.path.join(
@@ -121,6 +134,10 @@ def main():
             ch = cv2.waitKey(0)
             if ch == 27 or ch == ord("q") or ch == ord("Q"):
                 break
+        # 打印总时间和平均时间
+        print(f'totalTime: ({totalTime:.3f}ms)')
+        aveTime = totalTime / len(files)
+        print(f'totalTime: ({aveTime:.3f}ms)')
     elif args.demo == "video" or args.demo == "webcam":
         cap = cv2.VideoCapture(args.path if args.demo == "video" else args.camid)
         width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float
