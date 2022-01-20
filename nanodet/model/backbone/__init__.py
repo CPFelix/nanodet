@@ -22,7 +22,7 @@ from .repvgg import RepVGG
 from .resnet import ResNet
 from .shufflenetv2 import ShuffleNetV2
 
-from .convnext import ConvNeXt
+from .convnext import ConvNeXt, ConvNeXt_BN_RELU
 
 
 def build_backbone(cfg):
@@ -44,5 +44,7 @@ def build_backbone(cfg):
         return RepVGG(**backbone_cfg)
     elif name == "ConvNeXt":
         return ConvNeXt(**backbone_cfg)
+    elif name == "ConvNeXt_BN_RELU":
+        return ConvNeXt_BN_RELU(**backbone_cfg)
     else:
         raise NotImplementedError
