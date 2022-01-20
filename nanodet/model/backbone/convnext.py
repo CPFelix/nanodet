@@ -79,7 +79,7 @@ class Block(nn.Module):
 
 class Block_BN_RELU(nn.Module):
     """
-    (1) DwConv -> LayerNorm (channels_first) -> 1x1 Conv -> GELU -> 1x1 Conv; all in (N, C, H, W)
+    (1) DwConv -> BN -> 1x1 Conv -> RELU -> 1x1 Conv; all in (N, C, H, W)
     """
     def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
         super().__init__()
