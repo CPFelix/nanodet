@@ -16,7 +16,7 @@ model:
     backbone:
       name: ConvNeXt
       out_stages: [1,2,3]
-      depths: [2,2,2,2]
+      depths: [3,3,3,3]
     fpn:
       name: GhostPAN
       in_channels: [192, 384, 768]

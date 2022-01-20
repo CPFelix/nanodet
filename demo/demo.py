@@ -18,8 +18,8 @@ video_ext = ["mp4", "mov", "avi", "mkv"]
 # cuda同步时间
 def time_sync():
     # pytorch-accurate time
-    # if torch.cuda.is_available():
-    #     torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     return time.time()
 
 def parse_args():
@@ -100,15 +100,15 @@ def get_image_list(path):
 def main():
     args = parse_args()
     local_rank = 0
-    # torch.backends.cudnn.enabled = True
-    # torch.backends.cudnn.benchmark = True
-    torch.backends.cudnn.enabled = False
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True
+    # torch.backends.cudnn.enabled = False
+    # torch.backends.cudnn.benchmark = False
 
     load_config(cfg, args.config)
     logger = Logger(local_rank, use_tensorboard=False)
-    # predictor = Predictor(cfg, args.model, logger, device="cuda:0")
-    predictor = Predictor(cfg, args.model, logger, device="cpu")
+    predictor = Predictor(cfg, args.model, logger, device="cuda:0")
+    # predictor = Predictor(cfg, args.model, logger, device="cpu")
     logger.log('Press "Esc", "q" or "Q" to exit.')
     current_time = time.localtime()
     if args.demo == "image":
