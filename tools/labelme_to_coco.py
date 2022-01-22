@@ -1,16 +1,17 @@
 # -*- coding:utf-8 -*-
 # !/usr/bin/env python
 
-import argparse
+# import argparse
 import json
-import matplotlib.pyplot as plt
-import skimage.io as io
+# import matplotlib.pyplot as plt
+# import skimage.io as io
 import cv2
-from labelme import utils
+# from labelme import utils
 import numpy as np
 import glob
 import PIL.Image
-
+from PIL import Image, ImageDraw
+from tqdm import tqdm
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -36,24 +37,35 @@ class labelme2coco(object):
         self.categories = []
         self.annotations = []
         # self.data_coco = {}
-        self.label = []
+        self.label = ['face', 'hand', 'cigarette', 'cellphone']
+        # self.exclude_label = ['face', 'cellphone']
         self.annID = 1
         self.height = 0
         self.width = 0
 
+        # 统计不同类别框的标注数量
+        self.stats = {}
+
         self.save_json()
 
     def data_transfer(self):
-
-        for num, json_file in enumerate(self.labelme_json):
+        for num, json_file in enumerate(tqdm(self.labelme_json)):
             with open(json_file, 'r', encoding='utf-8') as fp:
                 data = json.load(fp)  # 加载json文件
                 self.images.append(self.image(data, num))
                 for shapes in data['shapes']:
                     label = shapes['label']
+                    # # 跳过特定类别
+                    # if label in self.exclude_label:
+                    #     continue
+                    if label not in self.stats.keys():
+                        self.stats[label] = 0
+                    self.stats[label] += 1
                     if label not in self.label:
-                        self.categories.append(self.categorie(label))
-                        self.label.append(label)
+                        # self.categories.append(self.categorie(label))
+                        # self.label.append(label)
+                        print(label + "is not in label list!")
+                    self.categories.append(self.categorie(label))
                     points = shapes['points']  # 这里的point是用rectangle标注得到的，只有两个点，需要转成四个点
                     # points.append([points[0][0],points[1][1]])
                     # points.append([points[1][0],points[0][1]])
@@ -65,7 +77,7 @@ class labelme2coco(object):
         # img = utils.img_b64_to_arr(data['imageData'])  # 解析原图片数据
         # img=io.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath']) # 通过图片路径打开图片
         # img = cv2.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath'], 0)
-        img = cv2.imdecode(np.fromfile("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath'], dtype=np.uint8), -1)
+        img = cv2.imdecode(np.fromfile("F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\image\\" + data['imagePath'], dtype=np.uint8), -1)
         height, width = img.shape[:2]
         img = None
         image['height'] = height
@@ -81,7 +93,7 @@ class labelme2coco(object):
     def categorie(self, label):
         categorie = {}
         categorie['supercategory'] = 'None'
-        categorie['id'] = len(self.label) + 1  # 0 默认为背景
+        categorie['id'] = self.label.index(label) + 1  # 0 默认为背景
         categorie['name'] = label
         return categorie
 
@@ -159,7 +171,8 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, 'w', encoding='utf-8'), indent=4, ensure_ascii=False, cls=MyEncoder)  # indent=4 更加美观显示
 
 if __name__ == "__main__":
-    labelme_json = glob.glob('F:\\阜康测试视频\\frame-16\\labelme\\test\\json\\*.json')
+    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\json\\*.json')
     # labelme_json=['./Annotations/*.json']
 
-    labelme2coco(labelme_json, 'F:\\阜康测试视频\\frame-16\\labelme\\test\\coco\\test.json')
+    object = labelme2coco(labelme_json, 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\val.json')
+    print(object.stats)
