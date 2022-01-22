@@ -63,6 +63,12 @@ class Block(nn.Module):
         self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim,1,1)),
                                   requires_grad=True) if layer_scale_init_value > 0 else None
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        '''
+        identity模块不改变输入。在增减网络的过程中我们就可以用identity占个位置，这样网络整体层数永远不变，看起来可能舒服一些
+        Stochastic Depth(随机深度网络)就是在训练时加入了一个随机变量b，其中b的概率分布是满足一个伯努利分布的，
+        然后将f乘以b，对残差部分做了随机丢弃。如果b = 1，这个结构即是原始的ResNet结构，
+        而当b = 0时，残差支路没有被激活，整个结构退化为一个恒等函数。
+        '''
 
     def forward(self, x):
         input = x
