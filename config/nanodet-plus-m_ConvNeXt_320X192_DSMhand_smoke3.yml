@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/test
+save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -27,7 +27,7 @@ model:
       activation: LeakyReLU
     head:
       name: NanoDetPlusHead
-      num_classes: 2
+      num_classes: 4
       input_channel: 96
       feat_channels: 96
       stacked_convs: 2
@@ -52,7 +52,7 @@ model:
     # Auxiliary head, only use in training time.
     aux_head:
       name: SimpleConvHead
-      num_classes: 2
+      num_classes: 4
       input_channel: 192
       feat_channels: 192
       stacked_convs: 4
@@ -62,8 +62,8 @@ model:
 data:
   train:
     name: CocoDataset
-    img_path: /home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/train
-    ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
+    img_path: /home/chenpengfei/dataset/28-09fukang/train/image
+    ann_path: /home/chenpengfei/dataset/28-09fukang/train/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
     load_mosaic: 0.0  # 增加mosaic数据增强
@@ -82,19 +82,19 @@ data:
       normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
   val:
     name: CocoDataset
-    img_path: /home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/val
-    ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/val.json
+    img_path: /home/chenpengfei/dataset/28-09fukang/val/image
+    ann_path: /home/chenpengfei/dataset/28-09fukang/val/val.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
       normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
 device:
-  gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [1,2,3,4] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 64
 schedule:
 #  resume: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_280/model_last.ckpt
-#  load_model:
+#  load_model: /home/chenpengfei/nanodet/workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
   optimizer:
     name: AdamW
     lr: 0.001
@@ -116,4 +116,4 @@ evaluator:
 log:
   interval: 50
 
-class_names: ['hand', 'cigarette']
+class_names: ['face', 'hand', 'cigarette', 'cellphone']
