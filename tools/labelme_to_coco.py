@@ -65,7 +65,12 @@ class labelme2coco(object):
                         # self.categories.append(self.categorie(label))
                         # self.label.append(label)
                         print(label + "is not in label list!")
-                    self.categories.append(self.categorie(label))
+                    hasFlag = False
+                    for categorie in self.categories:
+                        if label == categorie["name"]:
+                            hasFlag = True
+                    if not hasFlag:
+                        self.categories.append(self.categorie(label))
                     points = shapes['points']  # 这里的point是用rectangle标注得到的，只有两个点，需要转成四个点
                     # points.append([points[0][0],points[1][1]])
                     # points.append([points[1][0],points[0][1]])
@@ -77,7 +82,7 @@ class labelme2coco(object):
         # img = utils.img_b64_to_arr(data['imageData'])  # 解析原图片数据
         # img=io.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath']) # 通过图片路径打开图片
         # img = cv2.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath'], 0)
-        img = cv2.imdecode(np.fromfile("F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\image\\" + data['imagePath'], dtype=np.uint8), -1)
+        img = cv2.imdecode(np.fromfile("F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\image\\" + data['imagePath'], dtype=np.uint8), -1)
         height, width = img.shape[:2]
         img = None
         image['height'] = height
@@ -171,8 +176,8 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, 'w', encoding='utf-8'), indent=4, ensure_ascii=False, cls=MyEncoder)  # indent=4 更加美观显示
 
 if __name__ == "__main__":
-    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\json\\*.json')
+    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\json\\*.json')
     # labelme_json=['./Annotations/*.json']
 
-    object = labelme2coco(labelme_json, 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\val\\val.json')
+    object = labelme2coco(labelme_json, 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\train.json')
     print(object.stats)
