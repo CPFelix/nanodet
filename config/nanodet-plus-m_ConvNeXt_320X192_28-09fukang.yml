@@ -79,8 +79,7 @@ data:
       brightness: 0.2  # 亮度
       contrast: [0.6, 1.4]  # 对比度
       saturation: [0.5, 1.2]  # 饱和度
-      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
-#      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
+      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
   val:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/28-09fukang/val/image
@@ -88,13 +87,13 @@ data:
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
-      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
+      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
 device:
   gpu_ids: [1,2,3,4] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 64
 schedule:
-#  resume: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_280/model_last.ckpt
+  resume: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang/model_last.ckpt
 #  load_model: /home/chenpengfei/nanodet/workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
   optimizer:
     name: AdamW
