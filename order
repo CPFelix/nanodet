@@ -1,3 +1,4 @@
-python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2.yml
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang.yml > nohup_out.file 2>&1 &
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2.yml > workspace/nohup/nnohup_out_nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2.file 2>&1 &
 
 tensorboard --logdir ./
