@@ -90,4 +90,11 @@ class CocoDetectionEvaluator:
         eval_results = {}
         for k, v in zip(self.metric_names, aps):
             eval_results[k] = v
+        # 评估特定类别
+        for classID in self.cat_ids:
+            print("-----------------{}--------------------\n".format(str(classID)))
+            coco_eval.params.catIds = [classID]  # 1 hand 2 cigarette
+            coco_eval.evaluate()
+            coco_eval.accumulate()
+            coco_eval.summarize()
         return eval_results
