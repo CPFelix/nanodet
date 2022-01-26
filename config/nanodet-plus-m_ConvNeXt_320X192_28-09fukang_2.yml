@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2
+save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_loss-weight2_pretrained_28-09fukang_2_cigarette
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -63,7 +63,7 @@ data:
   train:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/28-09fukang_2/train/image
-    ann_path: /home/chenpengfei/dataset/28-09fukang_2/train/train.json
+    ann_path: /home/chenpengfei/dataset/28-09fukang_2/train/train_all_2_cigarette.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
     load_mosaic: 0.0  # 增加mosaic数据增强
@@ -89,12 +89,12 @@ data:
     pipeline:
       normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
 device:
-  gpu_ids: [5,6] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [1,2] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
-  batchsize_per_gpu: 64
+  batchsize_per_gpu: 32
 schedule:
-  resume: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2/model_last.ckpt
-#  load_model: /home/chenpengfei/nanodet/workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
+#  resume: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2/model_last.ckpt
+  load_model: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
   optimizer:
     name: AdamW
     lr: 0.001

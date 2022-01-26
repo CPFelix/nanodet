@@ -50,6 +50,26 @@ def quality_focal_loss(pred, target, beta=2.0):
         pred[pos, pos_label], score[pos], reduction="none"
     ) * scale_factor.abs().pow(beta)
 
+    # # 类别权重
+    # pos_0 = torch.nonzero((label == 0) & (label < bg_class_ind), as_tuple=False).squeeze(
+    #     1
+    # )
+    # pos_1 = torch.nonzero((label == 1) & (label < bg_class_ind), as_tuple=False).squeeze(
+    #     1
+    # )
+    # pos_label_0 = label[pos_0].long()
+    # # positives are supervised by bbox quality (IoU) score
+    # scale_factor = score[pos_0] - pred_sigmoid[pos_0, pos_label_0]
+    # loss[pos_0, pos_label_0] = F.binary_cross_entropy_with_logits(
+    #     pred[pos_0, pos_label_0], score[pos_0], reduction="none"
+    # ) * scale_factor.abs().pow(beta)
+    # pos_label_1 = label[pos_1].long()
+    # # positives are supervised by bbox quality (IoU) score
+    # scale_factor = score[pos_1] - pred_sigmoid[pos_1, pos_label_1]
+    # loss[pos_1, pos_label_1] = F.binary_cross_entropy_with_logits(
+    #     pred[pos_1, pos_label_1], score[pos_1], reduction="none"
+    # ) * scale_factor.abs().pow(beta) * 2.0
+
     loss = loss.sum(dim=1, keepdim=False)
     return loss
 

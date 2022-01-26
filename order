@@ -1,4 +1,15 @@
-nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang.yml > nohup_out.file 2>&1 &
-nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2.yml > workspace/nohup/nnohup_out_nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2.file 2>&1 &
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang.file 2>&1 &
+
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_loss-weight2_pretrained_28-09fukang_2.file 2>&1 &
+
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2_cigarette.file 2>&1 &
+
+
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2+datafame_smoke.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang_2+datafame_smoke.file 2>&1 &
+
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2+DSMhand_smoke3.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang_2+DSMhand_smoke3.file 2>&1 &
+
+
+nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2+DSMhand_smoke3-cigarette.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang_2+DSMhand_smoke3-cigarette.file 2>&1 &
 
 tensorboard --logdir ./

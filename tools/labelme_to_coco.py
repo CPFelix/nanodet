@@ -12,6 +12,7 @@ import glob
 import PIL.Image
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+import os
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -26,7 +27,7 @@ class MyEncoder(json.JSONEncoder):
 
 
 class labelme2coco(object):
-    def __init__(self, labelme_json=[], save_json_path='./train.json'):
+    def __init__(self, labelme_json=[], save_json_path='./train.json', label = [], image_path=""):
         '''
         :param labelme_json: 所有labelme的json文件路径组成的列表
         :param save_json_path: json保存位置
@@ -36,8 +37,11 @@ class labelme2coco(object):
         self.images = []
         self.categories = []
         self.annotations = []
+        self.image_path = image_path
         # self.data_coco = {}
-        self.label = ['face', 'hand', 'cigarette', 'cellphone']
+        # self.label = ['face', 'hand', 'cigarette', 'cellphone']
+        self.label = label
+        # self.label = ['cigarette']
         # self.exclude_label = ['face', 'cellphone']
         self.annID = 1
         self.height = 0
@@ -50,6 +54,7 @@ class labelme2coco(object):
 
     def data_transfer(self):
         for num, json_file in enumerate(tqdm(self.labelme_json)):
+            # print(json_file + "\n")
             with open(json_file, 'r', encoding='utf-8') as fp:
                 data = json.load(fp)  # 加载json文件
                 self.images.append(self.image(data, num))
@@ -64,7 +69,8 @@ class labelme2coco(object):
                     if label not in self.label:
                         # self.categories.append(self.categorie(label))
                         # self.label.append(label)
-                        print(label + "is not in label list!")
+                        # print(label + " is not in label list!")
+                        continue
                     hasFlag = False
                     for categorie in self.categories:
                         if label == categorie["name"]:
@@ -82,7 +88,7 @@ class labelme2coco(object):
         # img = utils.img_b64_to_arr(data['imageData'])  # 解析原图片数据
         # img=io.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath']) # 通过图片路径打开图片
         # img = cv2.imread("F:\\阜康测试视频\\frame-16\\labelme\\test\\img\\" + data['imagePath'], 0)
-        img = cv2.imdecode(np.fromfile("F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\image\\" + data['imagePath'], dtype=np.uint8), -1)
+        img = cv2.imdecode(np.fromfile(os.path.join(self.image_path, data['imagePath']), dtype=np.uint8), -1)
         height, width = img.shape[:2]
         img = None
         image['height'] = height
@@ -176,8 +182,9 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, 'w', encoding='utf-8'), indent=4, ensure_ascii=False, cls=MyEncoder)  # indent=4 更加美观显示
 
 if __name__ == "__main__":
-    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\json\\*.json')
+    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\json\\*.json')
     # labelme_json=['./Annotations/*.json']
-
-    object = labelme2coco(labelme_json, 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\all\\train\\train.json')
+    image_path = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\image"
+    save_json_path = 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\train.json'
+    object = labelme2coco(labelme_json, save_json_path, label=['hand', 'cigarette'], image_path = image_path)
     print(object.stats)

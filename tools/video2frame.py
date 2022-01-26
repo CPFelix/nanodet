@@ -5,7 +5,7 @@ import sys
 from PIL import Image
 from tqdm import tqdm
 
-def cut(video_file, target_dir):
+def cut(video_file, target_dir, warnflag):
     videoname = video_file.split("\\")[-1].split(".")[0]
     cap = cv2.VideoCapture(video_file)  # 获取到一个视频
     isOpened = cap.isOpened  # 判断是否打开
@@ -30,9 +30,8 @@ def cut(video_file, target_dir):
         rate = 16  # 4帧抽一张
         if (i % rate != 0):
             continue
-
-        fileName1 = videoname + "_" + str(i) + ".jpg"
-        data = video_file.split("\\")[3].split("-")[1]
+        fileName1 = videoname + "_" + str(i) + "_" + str(warnflag) + ".jpg"
+        data = video_file.split("\\")[-3].split("-")[1]
         fileName = data + "_" + fileName1
         # fileName = str(i) + ".jpg"
         if (flag == True):
@@ -60,16 +59,31 @@ if __name__ == '__main__':
     # video_file = 'F:\\阜康测试视频\\video\\test\\videos-20220103\\抽烟报警(主驾)\\新B27700_1585.mp4'
     # savePath = video_file.split(".")[0].replace("\\video\\", "\\frame\\") + "\\"
     # cut(video_file, savePath)
-    videoDir = "F:\\阜康公安--试用告警视频\\28-09"
-    saveDir = "F:\\阜康测试视频\\28-09\\"
+    videoDir = "F:\\阜康测试视频\\14-21\\原始视频"
+    saveDir = "F:\\阜康测试视频\\14-21\\frame-16\\"
     i = 0
-    do_list = ["抽烟报警(副驾)", "抽烟报警(后排)", "抽烟报警(主驾)", "接打电话报警(主驾)"]
+    do_list = ["抽烟报警(副驾)", "抽烟报警(后排)", "抽烟报警(主驾)"]
+    # do_list = ["接打电话报警(主驾)"]
     for root, dirs, files in os.walk(videoDir):
         for dir in dirs:
             videoDir1 = os.path.join(root, dir)
             for root1, dirs1, files1 in os.walk(videoDir1):
                 for dir1 in dirs1:
                     if dir1 in do_list:
+                        # 标记报警类型
+                        '''
+                        43:'抽烟报警(后排)',  53:'抽烟报警(副驾)', 63:'抽烟报警(主驾)',
+                            41:'疲劳报警(后排)', 51:'疲劳报警(副驾)', 61:'疲劳驾驶报警(主驾)',
+                            62:'接打电话报警(主驾)'
+                        '''
+                        if dir1 == "抽烟报警(副驾)":
+                            warnflag = 53
+                        elif dir1 == "抽烟报警(后排)":
+                            warnflag = 43
+                        elif dir1 == "抽烟报警(主驾)":
+                            warnflag = 63
+                        elif dir1 == "接打电话报警(主驾)":
+                            warnflag = 62
                         videoDir2 = os.path.join(root1, dir1)
                         print(videoDir2)
                         for file in tqdm(os.listdir(videoDir2)):
@@ -80,7 +94,7 @@ if __name__ == '__main__':
                             # savePath = videofile.split(".")[0].replace("\\video\\", "\\frame-16\\") + "\\"
                             savePath = saveDir + dir1 + "\\" + LPR + "\\"
                             # print(savePath)
-                            cut(videofile, savePath)
+                            cut(videofile, savePath, warnflag)
     print(i)
 
 

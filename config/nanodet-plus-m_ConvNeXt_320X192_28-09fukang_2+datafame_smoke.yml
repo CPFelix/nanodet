@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_500
+save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang_2+datafame_smoke
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -14,13 +14,12 @@ model:
     name: NanoDetPlus
     detach_epoch: 10
     backbone:
-      name: ShuffleNetV2
-      model_size: 1.0x
-      out_stages: [2,3,4]
-      activation: LeakyReLU
+      name: ConvNeXt
+      out_stages: [1,2,3]
+      depths: [3,3,3,3]
     fpn:
       name: GhostPAN
-      in_channels: [116, 232, 464]
+      in_channels: [192, 384, 768]
       out_channels: 96
       kernel_size: 5
       num_extra_level: 1
@@ -63,8 +62,8 @@ model:
 data:
   train:
     name: CocoDataset
-    img_path: /home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/train
-    ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/train.json
+    img_path: /home/chenpengfei/dataset/28-09fukang_2+datafame_smoke/train/image
+    ann_path: /home/chenpengfei/dataset/28-09fukang_2+datafame_smoke/train/train.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
     load_mosaic: 0.0  # 增加mosaic数据增强
@@ -80,24 +79,22 @@ data:
       brightness: 0.2  # 亮度
       contrast: [0.6, 1.4]  # 对比度
       saturation: [0.5, 1.2]  # 饱和度
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
-#      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
+      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
   val:
     name: CocoDataset
-    img_path: /home/chenpengfei/dataset/DSMhand_smoke3/yolov5/images/val
-    ann_path: /home/chenpengfei/dataset/DSMhand_smoke3/coco/annotations/val.json
+    img_path: /home/chenpengfei/dataset/28-09fukang_2+datafame_smoke/val/image
+    ann_path: /home/chenpengfei/dataset/28-09fukang_2+datafame_smoke/val/val.json
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
-#      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
+      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
 device:
-  gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [1,2,3,4] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
-  batchsize_per_gpu: 256
+  batchsize_per_gpu: 128
 schedule:
-#  resume: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_280/model_last.ckpt
-#  load_model:
+#  resume: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_pretrained_28-09fukang_2/model_last.ckpt
+#  load_model: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
   optimizer:
     name: AdamW
     lr: 0.001
@@ -112,21 +109,6 @@ schedule:
     T_max: 300
     eta_min: 0.00005
   val_intervals: 10
-#  optimizer:
-#    name: SGD
-#    lr: 0.14
-#    momentum: 0.9
-#    weight_decay: 0.0001
-#  warmup:
-#    name: linear
-#    steps: 400
-#    ratio: 0.1
-#  total_epochs: 500
-#  lr_schedule:
-#    name: MultiStepLR
-#    milestones: [ 300,400,450 ]
-#    gamma: 0.1
-#  val_intervals: 10
 grad_clip: 35
 evaluator:
   name: CocoDetectionEvaluator
