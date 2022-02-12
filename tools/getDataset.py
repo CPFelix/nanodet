@@ -222,7 +222,7 @@ def csv2json():
                 json.dump(new_dict, f, indent=4)
 
 def getRandID():
-    rootdir = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\all_2\\train\\"
+    rootdir = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\"
     saveDir = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\all_2\\val\\"
     dict_id = {}
     for imgname in os.listdir(rootdir + "image"):
@@ -337,10 +337,159 @@ def copy_plate():
 
         # baseImg.show()
 
+def randDir():
+    # 将数据打乱均匀分到子文件夹
+    imgDir = ""
+    saveDir = ""
+    imglist = os.listdir(imgDir)
+    nums = len(imglist)
+    val_id = random.sample(imglist, 2)
+
+# 从文件夹中随机抽取一定数量图片
+def randSample():
+    imgDir = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\train\\image"
+    saveDir = "F:\\class4量化数据\\"
+    imglist = os.listdir(imgDir)
+    nums = len(imglist)
+    val_id = random.sample(imglist, 2000)
+    for imagename in tqdm(val_id):
+        sourcefile = os.path.join(imgDir, imagename)
+        desfile = saveDir + imagename
+        copyfile(sourcefile, desfile)
+
+
+# 计算IOU
+def bb_intersection_over_union(boxA, boxB):
+    boxA = [int(x) for x in boxA]
+    boxB = [int(x) for x in boxB]
+
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+    return iou
+
+def csv2json1():
+    # 读取csv与已有json融合
+    csvfile = "E:\\pycharm-projects\\dataset\\检测数据集\\keruisite\\keruisite_phone.csv"
+    TxtsavePath = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang+DSMhand_smoke3\\train\\image\\D3_image\\phone_new_json"
+    with open(csvfile, 'r') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            orgin_json = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang+DSMhand_smoke3\\train\\image\\D3_image\\" + row[0].split(".")[0] + ".json"
+            flag = False
+            if os.path.exists(orgin_json):
+                with open(orgin_json, 'r', encoding='utf-8') as fp:
+                    data = json.load(fp)  # 加载json文件
+                    for shapes in data['shapes']:
+                        json_label = shapes['label']
+                        if json_label == "cellphone":
+                            flag = True
+                            break
+                    if (flag):
+                        pass
+                    else:
+                        object = {}
+                        object["label"] = "cellphone"
+                        object["group_id"] = None
+                        object["shape_type"] = "rectangle"
+                        object["flags"] = {}
+                        object["points"] = []
+                        x1y1 = [float(row[1]), float(row[2])]
+                        x2y2 = [float(row[3]), float(row[4])]
+                        object["points"].append(x1y1)
+                        object["points"].append(x2y2)
+                        data["shapes"].append(object)
+                newjsonfile = os.path.join(TxtsavePath, row[0].split(".")[0] + ".json")
+                with open(newjsonfile, 'a') as f:
+                    json.dump(data, f, indent=4)
+
+# 更改json文件里的错误标签
+def editJson():
+    baseJsonPath = "F:\\阜康测试视频\\14-21\\整理标注文件\\image\\jjc"
+    TxtsavePath = "F:\\阜康测试视频\\14-21\\整理标注文件\\image\\jjc_edit"
+    for jsonname in tqdm(os.listdir(baseJsonPath)):
+        if jsonname.split(".")[-1] == "json":
+            json_file = os.path.join(baseJsonPath, jsonname)
+            hasFlag = False
+            with open(json_file, 'r', encoding='utf-8') as fp:
+                data = json.load(fp)  # 加载json文件
+                for i, shapes in enumerate(data['shapes']):
+                    label = shapes['label']
+                    if label == "手机":
+                        hasFlag = True
+                        data['shapes'][i]['label'] = "cellphone"
+            if (hasFlag):
+                newjsonfile = os.path.join(TxtsavePath, jsonname)
+                with open(newjsonfile, 'a') as f:
+                    json.dump(data, f, indent=4)
+
+
+# 随机选择1/9个ID做测试集，并保证有特定类别样本
+def getRandID1():
+    label_list = ['cigarette', 'cellphone']
+    rootdir = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\train\\fukang\\28-09fukang\\"
+    saveDir = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\"
+    dict_id = {}
+    for jsonname in os.listdir(rootdir + "json"):
+        # txtname = imgname.split(".")[0] + ".txt"
+        # source_file = os.path.join("E:\\pycharm-projects\\dataset\\DSMhand&smoke1\\labels\\train", txtname)
+        # target_file = os.path.join("E:\\pycharm-projects\\dataset\\DSMhand&smoke1\\labels\\val", txtname)
+        # copyfile(source_file, target_file)
+        # os.remove(source_file)
+        imgname = jsonname.split(".")[0] + ".jpg"
+        ID = jsonname.split("_")[1]
+        json_file = rootdir + "json\\" + jsonname
+        flag = False
+        with open(json_file, 'r', encoding='utf-8') as fp:
+            data = json.load(fp)  # 加载json文件
+            for i, shapes in enumerate(data['shapes']):
+                label = shapes['label']
+                if label in label_list:
+                    flag = True
+        if flag:
+            if (ID in dict_id.keys()):
+                dict_id[ID].append(imgname)
+            else:
+                dict_id[ID] = []
+                dict_id[ID].append(imgname)
+
+    # print(dict_id)
+    # 随机选择1/9个ID做测试集
+    val_nums = int(len(dict_id.keys()) // 9)
+    val_id = random.sample(dict_id.keys(), val_nums)
+    print(val_id)
+    for id in tqdm(dict_id.keys()):
+        if id in val_id:
+            for imgname in dict_id[id]:
+                source_file = rootdir + "image\\" + imgname
+                if not os.path.exists(saveDir + "image\\"):
+                    os.makedirs(saveDir + "image\\")
+                target_file = saveDir + "image\\" + imgname
+                copyfile(source_file, target_file)
+                os.remove(source_file)
+
+                txtfile = rootdir + "json\\" + imgname.split(".")[0] + ".json"
+                if os.path.exists(txtfile):
+                    source_file = txtfile
+                    if not os.path.exists(saveDir + "json\\"):
+                        os.makedirs(saveDir + "json\\")
+                    target_file = saveDir + "json\\" + imgname.split(".")[0] + ".json"
+                    copyfile(source_file, target_file)
+                    os.remove(source_file)
+
 if __name__ == "__main__":
-    get_smoke()
-
-
-
-
+    # get_smoke()
+    # csv2json1()
+    # editJson()
+    # getRandID1()
+    randSample()
 

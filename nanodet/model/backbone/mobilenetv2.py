@@ -143,14 +143,14 @@ class MobileNetV2(nn.Module):
                     )
                 )
             self.input_channel = output_channel
-        if stage_num == 6:
-            last_layer = ConvBNReLU(
-                self.input_channel,
-                self.last_channel,
-                kernel_size=1,
-                activation=self.activation,
-            )
-            stage.append(last_layer)
+        # if stage_num == 6:
+        #     last_layer = ConvBNReLU(
+        #         self.input_channel,
+        #         self.last_channel,
+        #         kernel_size=1,
+        #         activation=self.activation,
+        #     )
+        #     stage.append(last_layer)
         stage = nn.Sequential(*stage)
         return stage
 

@@ -15,6 +15,8 @@ from nanodet.util.path import mkdir
 image_ext = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 video_ext = ["mp4", "mov", "avi", "mkv"]
 
+import json
+
 # cuda同步时间
 def time_sync():
     # pytorch-accurate time
@@ -47,6 +49,9 @@ class Predictor(object):
         model = build_model(cfg.model)
         ckpt = torch.load(model_path, map_location=lambda storage, loc: storage)
         load_model_weight(model, ckpt, logger)
+        # 重新保存模型得以使用pytorch1.4加载
+        torch.save(ckpt, 'workspace/nanodet-plus-m_MobileNetV2_320X192_DSM_Dataset_class4_20220211_fukang/model_best/nanodet_model_best_resave.pth', _use_new_zipfile_serialization=False)
+
         if cfg.model.arch.backbone.name == "RepVGG":
             deploy_config = cfg.model
             deploy_config.arch.backbone.update({"deploy": True})
@@ -96,6 +101,112 @@ def get_image_list(path):
                 image_names.append(apath)
     return image_names
 
+# 计算IOU
+def bb_intersection_over_union(boxA, boxB):
+    boxA = [int(x) for x in boxA]
+    boxB = [int(x) for x in boxB]
+
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+    return iou
+
+# 做补充预标注(脸、手、手机)
+def editJson(image_name, dets, score_thresh):
+    all_box = []
+    for label in dets:
+        for bbox in dets[label]:
+            score = bbox[-1]
+            if score > score_thresh:
+                x0, y0, x1, y1 = [int(i) for i in bbox[:4]]
+                all_box.append([label, x0, y0, x1, y1, score])
+    all_box.sort(key=lambda v: v[5])
+    # jsonfile = image_name.replace("D3_image", "D3_json").replace(".jpg", ".json")
+    # newjsonfile = jsonfile.replace("D3_json", "new_D3_json")
+    jsonfile = image_name.replace("1421_image", "1421_json").replace(".jpg", ".json")
+    newjsonfile = jsonfile.replace("1421_json", "1421_new_json")
+    if os.path.exists(jsonfile):
+        with open(jsonfile, 'r', encoding='utf-8') as fp:
+            data = json.load(fp)  # 加载json文件
+            for box in all_box:
+                # 是否跟json文件中标注框重复标志位
+                flag = False
+                label, x0, y0, x1, y1, score = box
+                if label == 0:
+                    label_name = "face"
+                elif label == 1:
+                    label_name = "hand"
+                elif label == 2:
+                    continue
+                    label_name = "cigarette"
+                elif label == 3:
+                    continue
+                    label_name = "cellphone"
+
+                for shapes in data['shapes']:
+                    json_label = shapes['label']
+                    boxA = [shapes['points'][0][0], shapes['points'][0][1], shapes['points'][1][0], shapes['points'][1][1]]
+                    boxB = [x0, y0, x1, y1]
+                    if (label_name == json_label):
+                        iou = bb_intersection_over_union(boxA, boxB)
+                        if (iou > 0.5):
+                            flag = True
+                            break
+                if (flag):
+                    continue
+                else:
+                    object = {}
+                    object["label"] = label_name
+                    object["group_id"] = None
+                    object["shape_type"] = "rectangle"
+                    object["flags"] = {}
+                    object["points"] = []
+                    x1y1 = [float(x0), float(y0)]
+                    x2y2 = [float(x1), float(y1)]
+                    object["points"].append(x1y1)
+                    object["points"].append(x2y2)
+                    data["shapes"].append(object)
+            with open(newjsonfile, 'a') as f:
+                json.dump(data, f, indent=4)
+    else:
+        new_dict = {"version": "4.6.0", "flags": {}, "shapes": [], "imageData": None}  # label format
+        new_dict["imagePath"] = image_name.split("/")[-1]
+        img = cv2.imread(image_name)
+        new_dict["imageHeight"] = img.shape[0]
+        new_dict["imageWidth"] = img.shape[1]
+        for box in all_box:
+            label, x0, y0, x1, y1, score = box
+            object = {}
+            if label == 0:
+                object["label"] = "face"
+            elif label == 1:
+                object["label"] = "hand"
+            elif label == 2:
+                object["label"] = "cigarette"
+            elif label == 3:
+                object["label"] = "cellphone"
+            object["group_id"] = None
+            object["shape_type"] = "rectangle"
+            object["flags"] = {}
+            object["points"] = []
+            x1y1 = [float(x0), float(y0)]
+            x2y2 = [float(x1), float(y1)]
+            object["points"].append(x1y1)
+            object["points"].append(x2y2)
+            new_dict["shapes"].append(object)
+        with open(newjsonfile, 'a') as f:
+            json.dump(new_dict, f, indent=4)
+
+
 
 def main():
     args = parse_args()
@@ -127,6 +238,10 @@ def main():
             t2 = time_sync()
             totalTime += (t2 - t1) * 1000.0
             result_image = predictor.visualize(res[0], meta, cfg.class_names, 0.35)
+
+            # 做补充预标注(脸、手、手机)
+            # editJson(image_name, res[0], 0.5)
+
             if args.save_result:
                 save_folder = os.path.join(
                     cfg.save_dir, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)

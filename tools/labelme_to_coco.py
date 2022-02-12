@@ -57,7 +57,11 @@ class labelme2coco(object):
             # print(json_file + "\n")
             with open(json_file, 'r', encoding='utf-8') as fp:
                 data = json.load(fp)  # 加载json文件
-                self.images.append(self.image(data, num))
+                image_name = json_file.split("\\")[-1].split(".")[0] + ".jpg"
+                # 加入上层文件夹路径
+                # image_name = json_file.split("\\").split(".")[0] + ".jpg"
+                # self.images.append(self.image(data, num))
+                self.images.append(self.image_from_json(data, num, image_name))
                 for shapes in data['shapes']:
                     label = shapes['label']
                     # # 跳过特定类别
@@ -98,6 +102,19 @@ class labelme2coco(object):
         image['file_name'] = data['imagePath']
         self.height = height
         self.width = width
+
+        return image
+
+    # 从Json文件中获取图片信息
+    def image_from_json(self, data, num, image_name):
+        image = {}
+        image['height'] = data["imageHeight"]
+        image['width'] = data["imageWidth"]
+        image['id'] = num + 1
+        # image['file_name'] = data['imagePath'].split('/')[-1]
+        image['file_name'] = image_name
+        self.height = data["imageHeight"]
+        self.width = data["imageWidth"]
 
         return image
 
@@ -182,9 +199,9 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, 'w', encoding='utf-8'), indent=4, ensure_ascii=False, cls=MyEncoder)  # indent=4 更加美观显示
 
 if __name__ == "__main__":
-    labelme_json = glob.glob('F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\json\\*.json')
+    labelme_json = glob.glob('E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\json\\*.json')
     # labelme_json=['./Annotations/*.json']
-    image_path = "F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\image"
-    save_json_path = 'F:\\阜康测试视频\\28-09\\整理返回标注数据\\28-09fukang_2+DSMhand_smoke3\\train\\train.json'
-    object = labelme2coco(labelme_json, save_json_path, label=['hand', 'cigarette'], image_path = image_path)
+    image_path = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\image"
+    save_json_path = 'E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\val.json'
+    object = labelme2coco(labelme_json, save_json_path, label=['face', 'hand', 'cigarette', 'cellphone'], image_path = image_path)
     print(object.stats)

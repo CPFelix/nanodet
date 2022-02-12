@@ -12,4 +12,11 @@ nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2
 
 nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2+DSMhand_smoke3-cigarette.yml > workspace/nohup/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang_2+DSMhand_smoke3-cigarette.file 2>&1 &
 
+python tools/train.py config/nanodet-plus-m_MobileNetV2_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+
+
+
 tensorboard --logdir ./
