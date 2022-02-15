@@ -163,7 +163,7 @@ class ConvNeXt(nn.Module):
         # self.head.weight.data.mul_(head_init_scale)
         # self.head.bias.data.mul_(head_init_scale)
         self.out_stages = out_stages
-        self.init_weights(pretrain=pretrain)
+        # self.init_weights(pretrain=pretrain)
 
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv2d, nn.Linear)):

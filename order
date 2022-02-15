@@ -14,9 +14,13 @@ nohup python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_28-09fukang_2
 
 python tools/train.py config/nanodet-plus-m_MobileNetV2_320X192_DSM_Dataset_class4_20220211_fukang.yml
 
+python tools/train.py config/nanodet-plus-m_MobileNetV2_124_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
 python tools/train.py config/nanodet-plus-m_ConvNeXt_320X192_DSM_Dataset_class4_20220211_fukang.yml
 
+python tools/train.py config/nanodet-plus-m_MobileNetV2_14_320X192_DSM_Dataset_class4_20220211_fukang.yml
 
+python tools/train.py config/nanodet-plus-m_MobileNetV2_14_fpn_320X192_DSM_Dataset_class4_20220211_fukang.yml
 
 
 tensorboard --logdir ./

@@ -130,8 +130,13 @@ class GhostPAN(nn.Module):
                     activation=activation,
                 )
             )
+        # 为保证亿智模型转换前后Bin文件一致，需替换上采样层为反卷积
+        self.deconvs = nn.ModuleList()
+        for idx in range(len(self.in_channels)):
+            self.deconvs.append(nn.ConvTranspose2d(self.out_channels, self.out_channels, 2, 2))
+
         self.top_down_blocks = nn.ModuleList()
-        for idx in range(len(in_channels) - 1, 0, -1):
+        for idx in range(len(in_channels) - 1, -1, -1):
             self.top_down_blocks.append(
                 GhostBlocks(
                     out_channels * 2,
@@ -217,7 +222,9 @@ class GhostPAN(nn.Module):
 
             inner_outs[0] = feat_heigh
 
-            upsample_feat = self.upsample(feat_heigh)
+            # upsample_feat = self.upsample(feat_heigh)
+            upsample_feat = self.deconvs[idx](feat_heigh)  # 为保证亿智模型转换前后Bin文件一致，需替换上采样层为反卷积
+            # upsample_feat = self.deconvs[idx](self.deconvs[idx](feat_heigh))  # 由20*12经两次反卷积得到80*48
 
             inner_out = self.top_down_blocks[len(self.in_channels) - 1 - idx](
                 torch.cat([upsample_feat, feat_low], 1)
@@ -230,6 +237,7 @@ class GhostPAN(nn.Module):
             feat_low = outs[-1]
             feat_height = inner_outs[idx + 1]
             downsample_feat = self.downsamples[idx](feat_low)
+            # downsample_feat = self.downsamples[idx](self.downsamples[idx](feat_low))  # 由20*12经两次反卷积得到80*48
             out = self.bottom_up_blocks[idx](
                 torch.cat([downsample_feat, feat_height], 1)
             )
@@ -240,5 +248,5 @@ class GhostPAN(nn.Module):
             self.extra_lvl_in_conv, self.extra_lvl_out_conv
         ):
             outs.append(extra_in_layer(inputs[-1]) + extra_out_layer(outs[-1]))
-
+            # outs.append(extra_in_layer(extra_in_layer(inputs[-1])) + extra_out_layer(extra_out_layer(outs[-1])))  # 由20*12经两次反卷积得到80*48
         return tuple(outs)

@@ -84,9 +84,8 @@ class FPN(nn.Module):
         # build top-down path
         used_backbone_levels = len(laterals)
         for i in range(used_backbone_levels - 1, 0, -1):
-            laterals[i - 1] += F.interpolate(
-                laterals[i], scale_factor=2, mode="bilinear"
-            )
+            laterals[i - 1] += F.interpolate(laterals[i], scale_factor=2, mode="bilinear")
+            # laterals[i - 1] += F.interpolate(laterals[i], scale_factor=4, mode="bilinear")  # 两倍上采样
 
         # build outputs
         outs = [
