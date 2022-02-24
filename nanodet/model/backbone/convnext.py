@@ -111,6 +111,90 @@ class Block_BN_RELU(nn.Module):
         x = input + self.drop_path(x)
         return x
 
+class Block_BN_RELU_k3_2(nn.Module):
+    """
+    (1) DwConv -> BN -> 1x1 Conv -> RELU -> 1x1 Conv; all in (N, C, H, W)
+    """
+    def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
+        super().__init__()
+        self.dwconv = nn.Conv2d(dim, dim, kernel_size=3, padding=1, groups=dim)  # depthwise conv
+        self.act = nn.ReLU()
+        self.norm = nn.BatchNorm2d(dim)
+        self.pwconv1 = nn.Conv2d(dim, dim*2, kernel_size=1, stride=1)
+        self.pwconv2 = nn.Conv2d(dim*2, dim, kernel_size=1, stride=1)
+        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim,1,1)),
+                                  requires_grad=True) if layer_scale_init_value > 0 else None
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+    def forward(self, x):
+        input = x
+        x = self.dwconv(x)
+        x = self.norm(x)
+        x = self.pwconv1(x)
+        x = self.act(x)
+        x = self.pwconv2(x)
+        if self.gamma is not None:
+            x = self.gamma * x
+
+        x = input + self.drop_path(x)
+        return x
+
+class Block_BN_RELU_k3(nn.Module):
+    """
+    (1) DwConv -> BN -> 1x1 Conv -> RELU -> 1x1 Conv; all in (N, C, H, W)
+    """
+    def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
+        super().__init__()
+        self.dwconv = nn.Conv2d(dim, dim, kernel_size=3, padding=1, groups=dim)  # depthwise conv
+        self.act = nn.ReLU()
+        self.norm = nn.BatchNorm2d(dim)
+        self.pwconv1 = nn.Conv2d(dim, dim*4, kernel_size=1, stride=1)
+        self.pwconv2 = nn.Conv2d(dim*4, dim, kernel_size=1, stride=1)
+        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim,1,1)),
+                                  requires_grad=True) if layer_scale_init_value > 0 else None
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+    def forward(self, x):
+        input = x
+        x = self.dwconv(x)
+        x = self.norm(x)
+        x = self.pwconv1(x)
+        x = self.act(x)
+        x = self.pwconv2(x)
+        if self.gamma is not None:
+            x = self.gamma * x
+
+        x = input + self.drop_path(x)
+        return x
+
+class Block_BN_RELU_2(nn.Module):
+    """
+    (1) DwConv -> BN -> 1x1 Conv -> RELU -> 1x1 Conv; all in (N, C, H, W)
+    """
+    def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
+        super().__init__()
+        self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim)  # depthwise conv
+        self.act = nn.ReLU()
+        self.norm = nn.BatchNorm2d(dim)
+        self.pwconv1 = nn.Conv2d(dim, dim*2, kernel_size=1, stride=1)
+        self.pwconv2 = nn.Conv2d(dim*2, dim, kernel_size=1, stride=1)
+        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim,1,1)),
+                                  requires_grad=True) if layer_scale_init_value > 0 else None
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+    def forward(self, x):
+        input = x
+        x = self.dwconv(x)
+        x = self.norm(x)
+        x = self.pwconv1(x)
+        x = self.act(x)
+        x = self.pwconv2(x)
+        if self.gamma is not None:
+            x = self.gamma * x
+
+        x = input + self.drop_path(x)
+        return x
+
 class ConvNeXt(nn.Module):
     r""" ConvNeXt
         A PyTorch impl of : `A ConvNet for the 2020s`  -

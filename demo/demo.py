@@ -50,7 +50,7 @@ class Predictor(object):
         ckpt = torch.load(model_path, map_location=lambda storage, loc: storage)
         load_model_weight(model, ckpt, logger)
         # 重新保存模型得以使用pytorch1.4加载
-        torch.save(ckpt, 'workspace/nanodet-plus-m_MobileNetV2_124_fpn_64_dconv_320X192_SGD500_DSM_Dataset_class4_20220211_fukang/model_best/nanodet_model_best_resave.pth', _use_new_zipfile_serialization=False)
+        torch.save(ckpt, 'workspace/nanodet-plus-m_ConvNeXt_3333_32-256_320X192_DSM_Dataset_class4_20220211_fukang/model_best/nanodet_model_best_resave.pth', _use_new_zipfile_serialization=False)
 
         if cfg.model.arch.backbone.name == "RepVGG":
             deploy_config = cfg.model

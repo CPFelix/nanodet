@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSM_Dataset_class4_20220211_fukang
+save_dir: workspace/test
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -17,6 +17,7 @@ model:
       name: ConvNeXt
       out_stages: [1,2,3]
       depths: [3,3,3,3]
+#      dims: [24, 32, 64, 96]
     fpn:
       name: GhostPAN
       in_channels: [192, 384, 768]
@@ -79,7 +80,7 @@ data:
       brightness: 0.2  # 亮度
       contrast: [0.6, 1.4]  # 对比度
       saturation: [0.5, 1.2]  # 饱和度
-      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
+      normalize: [[72.0, 72.0, 72.0], [64.0, 64.0, 64.0]]
   val:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/DSM_Dataset_class4_20220211_fukang/val/image
@@ -87,7 +88,7 @@ data:
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
-      normalize: [[87.64457, 87.67082, 87.538086], [55.132763, 55.13459, 55.132042]]
+      normalize: [[72.0, 72.0, 72.0], [64.0, 64.0, 64.0]]
 device:
   gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
@@ -95,19 +96,35 @@ device:
 schedule:
 #  resume: workspace/nanodet-plus-m_ConvNeXt_3333_320X192_28-09fukang/model_last.ckpt
 #  load_model: /home/chenpengfei/nanodet/workspace/nanodet-plus-m_ConvNeXt_3333_320X192_DSMhand_smoke3/model_best/model_best.ckpt
+#  optimizer:
+#    name: AdamW
+#    lr: 0.001
+#    weight_decay: 0.05
+#  warmup:
+#    name: linear
+#    steps: 500
+#    ratio: 0.0001
+#  total_epochs: 300
+#  lr_schedule:
+#    name: CosineAnnealingLR
+#    T_max: 300
+#    eta_min: 0.00005
+#  val_intervals: 10
+#grad_clip: 35
   optimizer:
-    name: AdamW
-    lr: 0.001
-    weight_decay: 0.05
+    name: SGD
+    lr: 0.14
+    momentum: 0.9
+    weight_decay: 0.0001
   warmup:
     name: linear
-    steps: 500
-    ratio: 0.0001
+    steps: 400
+    ratio: 0.1
   total_epochs: 300
   lr_schedule:
-    name: CosineAnnealingLR
-    T_max: 300
-    eta_min: 0.00005
+    name: MultiStepLR
+    milestones: [ 250,275,295 ]
+    gamma: 0.1
   val_intervals: 10
 grad_clip: 35
 evaluator:

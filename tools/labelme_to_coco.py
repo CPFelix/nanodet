@@ -57,6 +57,10 @@ class labelme2coco(object):
             # print(json_file + "\n")
             with open(json_file, 'r', encoding='utf-8') as fp:
                 data = json.load(fp)  # 加载json文件
+                # 如果标注文件中物体为空，则跳过
+                if (len(data['shapes']) == 0):
+                    print(json_file)
+                    continue
                 image_name = json_file.split("\\")[-1].split(".")[0] + ".jpg"
                 # 加入上层文件夹路径
                 # image_name = json_file.split("\\").split(".")[0] + ".jpg"
@@ -86,6 +90,7 @@ class labelme2coco(object):
                     # points.append([points[1][0],points[0][1]])
                     self.annotations.append(self.annotation(points, label, num))
                     self.annID += 1
+
 
     def image(self, data, num):
         image = {}
@@ -199,9 +204,9 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, 'w', encoding='utf-8'), indent=4, ensure_ascii=False, cls=MyEncoder)  # indent=4 更加美观显示
 
 if __name__ == "__main__":
-    labelme_json = glob.glob('E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\json\\*.json')
+    labelme_json = glob.glob('C:\\Users\\Administrator\\Desktop\\test\\json\\*.json')
     # labelme_json=['./Annotations/*.json']
-    image_path = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\image"
-    save_json_path = 'E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\val\\val.json'
+    image_path = "C:\\Users\\Administrator\\Desktop\\test\\image"
+    save_json_path = 'C:\\Users\\Administrator\\Desktop\\test\\test.json'
     object = labelme2coco(labelme_json, save_json_path, label=['face', 'hand', 'cigarette', 'cellphone'], image_path = image_path)
     print(object.stats)

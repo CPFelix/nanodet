@@ -170,17 +170,27 @@ class CocoDataset(BaseDataset):
             meta['gt_labels'] = labels4
             meta['gt_bboxes'] = bbox4
 
-        meta = self.pipeline(self, meta, input_size)
+        # 对香烟区域进行裁切（解决香烟目标过小问题）
+        if ((random.random() < self.crop_cigarette) and (self.mode == "train") and (2 in ann["labels"])):
+            img4, labels4, bbox4 = cut_cigarette(self, idx)
+            meta['img_info']['height'] = img4.shape[0]
+            meta['img_info']['width'] = img4.shape[1]
+            meta['img'] = img4
+            meta['gt_labels'] = labels4
+            meta['gt_bboxes'] = bbox4
 
-        # #保存预处理后的图片和对应标注
-        # img_draw = meta["img"].copy()
-        # for i, box in enumerate(meta["gt_bboxes"]):
-        #     cv2.rectangle(img_draw, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 0, 255), 2)
-        # imgname = "img_draw_" + str(random.randint(0, 10000)) + ".jpg"
-        # savePath = "/home/chenpengfei/temp/nanodet/"
-        # if not os.path.exists(savePath):
-        #     os.makedirs(savePath)
-        # cv2.imwrite(savePath + imgname, img_draw)
+            # #保存预处理后的图片和对应标注
+            # img_draw = meta["img"].copy()
+            # for i, box in enumerate(meta["gt_bboxes"]):
+            #     cv2.rectangle(img_draw, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 0, 255), 2)
+            # imgname = "img_draw_" + str(random.randint(0, 10000)) + ".jpg"
+            # savePath = "/home/chenpengfei/temp/nanodet_20220222/"
+            # if not os.path.exists(savePath):
+            #     os.makedirs(savePath)
+            # cv2.imwrite(savePath + imgname, img_draw)
+            # print("OK")
+
+        meta = self.pipeline(self, meta, input_size)
 
         meta["img"] = torch.from_numpy(meta["img"].transpose(2, 0, 1))
 
@@ -220,7 +230,7 @@ def load_image(self, i):
         r = max(self.input_size[0], self.input_size[1]) / max(h0, w0)  # ratio
         im = cv2.resize(img, (self.input_size[0], self.input_size[1]),
                         interpolation=cv2.INTER_AREA if r < 1 else cv2.INTER_LINEAR)
-    return im, img.shape[:2], im.shape[:2]  # im, hw_original, hw_resized
+    return im, img,  img.shape[:2], im.shape[:2]  # im, im_original, hw_original, hw_resized
 
 def load_mosaic(self, idx):
     # loads images in a 4-mosaic
@@ -470,3 +480,126 @@ def cut_mosaic(self, idx):
     bbox4 = labels4[:, 1:].astype(np.float32)
     labels4 = labels4[:, 0].astype(np.int64)
     return img4, labels4, bbox4
+
+
+# 计算IOU
+def bb_intersection_over_union(boxA, boxB):
+    boxA = [int(x) for x in boxA]
+    boxB = [int(x) for x in boxB]
+
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+    return iou
+
+# 将香烟区域进行一定比例裁切
+def cut_cigarette(self, idx):
+    labels, segments = [], []
+    # Load image
+    img, img_orgin, (h0, w0), (h, w) = load_image(self, idx)
+
+    # Labels
+    labels = []
+    ann = self.get_img_annotation(idx).copy()
+
+    iou_boxes = []
+    iou_labels = []
+    min_box = [0.0, 0.0, 0.0, 0.0]
+    for i, box in enumerate(ann["bboxes"]):
+        if ann["labels"][i] == 2:
+            iou_labels.append(ann["labels"][i].copy())
+            iou_boxes.append(ann["bboxes"][i].copy())
+            min_box = ann["bboxes"][i]
+
+    no_iou_boxes = []
+    no_iou_labels = []
+    for i, box in enumerate(ann["bboxes"]):
+        if ann["labels"][i] != 2:
+            iou = bb_intersection_over_union(min_box, box)
+            if iou > 0:
+                iou_labels.append(ann["labels"][i].copy())
+                iou_boxes.append(ann["bboxes"][i].copy())
+                min_box[0] = min(min_box[0], box[0])
+                min_box[1] = min(min_box[1], box[1])
+                min_box[2] = max(min_box[2], box[2])
+                min_box[3] = max(min_box[3], box[3])
+            else:
+                no_iou_labels.append(ann["labels"][i].copy())
+                no_iou_boxes.append(ann["bboxes"][i].copy())
+
+    crop_w = w0 / 2
+    crop_h = h0 / 2
+    center = [int((min_box[0] + min_box[2]) / 2), int((min_box[1] + min_box[3]) / 2)]
+
+    crop_box = [0.0, 0.0, 0.0, 0.0]
+    crop_box[0] = int(center[0] - crop_w / 2)
+    crop_box[1] = int(center[1] - crop_h / 2)
+    crop_box[2] = int(center[0] + crop_w / 2)
+    crop_box[3] = int(center[1] + crop_h / 2)
+
+    # 针对标注框最小外接框截断crop_box
+    if crop_box[0] > min_box[0]:
+        crop_box[0] = min_box[0]
+    if crop_box[1] > min_box[1]:
+        crop_box[1] = min_box[1]
+    if crop_box[2] < min_box[2]:
+        crop_box[2] = min_box[2]
+    if crop_box[3] < min_box[3]:
+        crop_box[3] = min_box[3]
+    # 针对原始图片尺寸截断crop_box
+    if crop_box[0] < 0:
+        crop_box[0] = 0
+    if crop_box[1] < 0:
+        crop_box[1] = 0
+    if crop_box[2] > w0:
+        crop_box[2] = w0
+    if crop_box[3] > h0:
+        crop_box[3] = h0
+
+    crop_box = [int(i) for i in crop_box]
+    img_crop = img_orgin[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]]
+
+    for i, box in enumerate(iou_boxes):
+        box1 = [0.0, 0.0, 0.0, 0.0]
+        box1[0] = box[0] - crop_box[0]
+        box1[1] = box[1] - crop_box[1]
+        box1[2] = box[2] - crop_box[0]
+        box1[3] = box[3] - crop_box[1]
+        label = np.append(iou_labels[i], box1)
+        labels.append(label)
+    for i, box in enumerate(no_iou_boxes):
+        iou = bb_intersection_over_union(crop_box, box)
+        if iou > 0:
+            if box[0] < crop_box[0]:
+                box[0] = crop_box[0]
+            if box[1] < crop_box[1]:
+                box[1] = crop_box[1]
+            if box[2] > crop_box[2]:
+                box[2] = crop_box[2]
+            if box[3] > crop_box[3]:
+                box[3] = crop_box[3]
+
+        # 截断后过小的框过滤掉
+        pixels_hand = 15
+        if not smallBox(box, pixels_hand):
+            continue
+        box1 = [0.0, 0.0, 0.0, 0.0]
+        box1[0] = box[0] - crop_box[0]
+        box1[1] = box[1] - crop_box[1]
+        box1[2] = box[2] - crop_box[0]
+        box1[3] = box[3] - crop_box[1]
+        label = np.append(no_iou_labels[i], box1)
+        labels.append(label)
+    labels = np.array(labels)
+    bboxs_crop = labels[:, 1:].astype(np.float32)
+    labels_crop = labels[:, 0].astype(np.int64)
+    return img_crop, labels_crop, bboxs_crop

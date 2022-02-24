@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/test
+save_dir: workspace/nanodet-plus-m_MobileNetV2_124_pan_64_dconv_320X192_SGD300_losscoefficient_DSM_Dataset_class4_20220211_fukang
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -15,24 +15,23 @@ model:
     detach_epoch: 10
     backbone:
       name: MobileNetV2
-      out_stages: [2, 4, 6]
+      out_stages: [1,2,4]
       activation: LeakyReLU
     fpn:
-      name: GhostPAN
-      in_channels: [32, 96, 320]
-      out_channels: 96
-      kernel_size: 5
-      num_extra_level: 1
-      use_depthwise: True
+      name: PAN
+      in_channels: [24,32,96]
+      out_channels: 64
+      num_outs: 3
       activation: LeakyReLU
+      kernel_size: 5
     head:
       name: NanoDetPlusHead
       num_classes: 4
-      input_channel: 96
-      feat_channels: 96
+      input_channel: 64
+      feat_channels: 64
       stacked_convs: 2
       kernel_size: 5
-      strides: [8, 16, 32, 64]
+      strides: [4, 8, 16]
       activation: LeakyReLU
       reg_max: 7
       norm_cfg:
@@ -53,10 +52,10 @@ model:
     aux_head:
       name: SimpleConvHead
       num_classes: 4
-      input_channel: 192
-      feat_channels: 192
+      input_channel: 128
+      feat_channels: 128
       stacked_convs: 4
-      strides: [8, 16, 32, 64]
+      strides: [4, 8, 16]
       activation: LeakyReLU
       reg_max: 7
 data:
@@ -68,6 +67,7 @@ data:
     keep_ratio: False
     load_mosaic: 0.0  # 增加mosaic数据增强
     cut_mosaic: 0.0  # 变形版mosaic
+    crop_cigarette: 0.0 # 裁切包含香烟的区域
     pipeline:
       perspective: 0.0 # 透视or仿射变换
       scale: [0.6, 1.4] # 放缩
@@ -79,8 +79,8 @@ data:
       brightness: 0.2  # 亮度
       contrast: [0.6, 1.4]  # 对比度
       saturation: [0.5, 1.2]  # 饱和度
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
-#      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
+#      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[72.0, 72.0, 72.0], [64.0, 64.0, 64.0]]
   val:
     name: CocoDataset
     img_path: /home/chenpengfei/dataset/DSM_Dataset_class4_20220211_fukang/val/image
@@ -88,45 +88,45 @@ data:
     input_size: [320,192] #[w,h]
     keep_ratio: False
     pipeline:
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
-#      normalize: [[72.26834, 72.94908, 71.93302], [63.723274, 63.75379, 63.695095]]
+#      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[72.0, 72.0, 72.0], [64.0, 64.0, 64.0]]
 device:
-  gpu_ids: [7] # Set like [0, 1, 2, 3] if you have multi-GPUs
+  gpu_ids: [0,1,2,3,4,7] # Set like [0, 1, 2, 3] if you have multi-GPUs
   workers_per_gpu: 10
   batchsize_per_gpu: 128
 schedule:
-#  resume: workspace/nanodet-plus-m_320X192_DSMhand_smoke3_MultiStepLR_280/model_last.ckpt
+#  resume: workspace/nanodet-plus-m_MobileNetV2_124_pan_64_dconv_kernel3_320X192_SGD500_DSM_Dataset_class4_20220211_fukang/model_last.ckpt
 #  load_model:
-  optimizer:
-    name: AdamW
-    lr: 0.001
-    weight_decay: 0.05
-  warmup:
-    name: linear
-    steps: 500
-    ratio: 0.0001
-  total_epochs: 300
-  lr_schedule:
-    name: CosineAnnealingLR
-    T_max: 300
-    eta_min: 0.00005
-  val_intervals: 10
 #  optimizer:
-#    name: SGD
-#    lr: 0.14
-#    momentum: 0.9
-#    weight_decay: 0.0001
+#    name: AdamW
+#    lr: 0.001
+#    weight_decay: 0.05
 #  warmup:
 #    name: linear
-#    steps: 400
-#    ratio: 0.1
-#  total_epochs: 500
+#    steps: 500
+#    ratio: 0.0001
+#  total_epochs: 300
 #  lr_schedule:
-#    name: MultiStepLR
-#    milestones: [ 300,400,450 ]
-#    gamma: 0.1
+#    name: CosineAnnealingLR
+#    T_max: 300
+#    eta_min: 0.00005
 #  val_intervals: 10
-grad_clip: 35
+  optimizer:
+    name: SGD
+    lr: 0.14
+    momentum: 0.9
+    weight_decay: 0.0001
+  warmup:
+    name: linear
+    steps: 400
+    ratio: 0.1
+  total_epochs: 300
+  lr_schedule:
+    name: MultiStepLR
+    milestones: [ 250,275,295 ]
+    gamma: 0.1
+  val_intervals: 10
+grad_clip: 5
 evaluator:
   name: CocoDetectionEvaluator
   save_key: mAP

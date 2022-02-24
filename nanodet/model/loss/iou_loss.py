@@ -97,6 +97,11 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
     area1 = (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
     area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
 
+    # 增加scale-sensitive gain coefficient (2 − wi × hi)
+    ss_coefficient = 2 - area2 / (320*192)
+    # print("ss_coefficient:\n")
+    # print(ss_coefficient)
+
     if is_aligned:
         lt = torch.max(bboxes1[..., :2], bboxes2[..., :2])  # [B, rows, 2]
         rb = torch.min(bboxes1[..., 2:], bboxes2[..., 2:])  # [B, rows, 2]
@@ -144,7 +149,9 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
     enclose_area = enclose_wh[..., 0] * enclose_wh[..., 1]
     enclose_area = torch.max(enclose_area, eps)
     gious = ious - (enclose_area - union) / enclose_area
-    return gious
+    # print("gious:\n")
+    # print(gious)
+    return gious, ss_coefficient
 
 
 @weighted_loss
@@ -229,8 +236,11 @@ def giou_loss(pred, target, eps=1e-7):
     Return:
         Tensor: Loss tensor.
     """
-    gious = bbox_overlaps(pred, target, mode="giou", is_aligned=True, eps=eps)
-    loss = 1 - gious
+    # print(pred)
+    gious, ss_coefficient = bbox_overlaps(pred, target, mode="giou", is_aligned=True, eps=eps)
+    # print(gious)
+    # loss = 1 - gious
+    loss = (1 - gious) * ss_coefficient
     return loss
 
 

@@ -8,6 +8,8 @@ import random
 from tqdm import tqdm
 import json
 from PIL import Image
+import math
+from random import shuffle
 
 def csv2yolov5():
     # 读取csv为yolov5标签文件
@@ -345,16 +347,23 @@ def randDir():
     nums = len(imglist)
     val_id = random.sample(imglist, 2)
 
-# 从文件夹中随机抽取一定数量图片
+# 从文件夹中随机抽取一定数量图片，分发标注任务
 def randSample():
-    imgDir = "E:\\pycharm-projects\\dataset\\DSM_Dataset_class4_20220211_fukang\\train\\image"
-    saveDir = "F:\\class4量化数据\\"
+    imgDir = "F:\\阜康测试视频\\22-10\\frame-16"
+    saveDir = "F:\\阜康测试视频\\22-10\\标注任务分配\\"
     imglist = os.listdir(imgDir)
     nums = len(imglist)
-    val_id = random.sample(imglist, 2000)
-    for imagename in tqdm(val_id):
+    people = 4
+    ave_nums = math.ceil(nums / people)
+    # val_id = random.sample(imglist, 2000)
+    shuffle(imglist)
+    for i, imagename in enumerate(tqdm(imglist)):
         sourcefile = os.path.join(imgDir, imagename)
-        desfile = saveDir + imagename
+        sonFold = str(math.floor(i / ave_nums))
+        desPath = saveDir + sonFold + "\\"
+        if not os.path.exists(desPath):
+            os.makedirs(desPath)
+        desfile = desPath + imagename
         copyfile(sourcefile, desfile)
 
 
@@ -412,6 +421,40 @@ def csv2json1():
                 with open(newjsonfile, 'a') as f:
                     json.dump(data, f, indent=4)
 
+# 合并两个json文件
+def mergeJson():
+    baseJsonPath1 = "F:\\阜康测试视频\\22-10\\frame-16-(0122-0210)-json"
+    baseJsonPath2 = "F:\\阜康测试视频\\22-10\\返回标注文件\\all"
+    TxtsavePath = "F:\\阜康测试视频\\22-10\\frame-16"
+    for jsonname in tqdm(os.listdir(baseJsonPath1)):
+        if jsonname.split(".")[-1] == "json":
+            json_file1 = os.path.join(baseJsonPath1, jsonname)
+            json_file2 = os.path.join(baseJsonPath2, jsonname)
+            with open(json_file1, 'r', encoding='utf-8') as fp1:
+                data1 = json.load(fp1)  # 加载json文件
+                if os.path.exists(json_file2):
+                    with open(json_file2, 'r', encoding='utf-8') as fp2:
+                        data2 = json.load(fp2)  # 加载json文件
+                        for shape in data2['shapes']:
+                            data1['shapes'].append(shape)
+                newjsonfile = os.path.join(TxtsavePath, jsonname)
+                with open(newjsonfile, 'a') as f:
+                    json.dump(data1, f, indent=4)
+
+# 统计标注框数量
+def getJsonNum():
+    baseJsonPath = "F:\\阜康测试视频\\22-10\\返回标注文件\\淑茗\\0"
+    nums = 0
+    for jsonname in tqdm(os.listdir(baseJsonPath)):
+        if jsonname.split(".")[-1] == "json":
+            json_file = os.path.join(baseJsonPath, jsonname)
+            with open(json_file, 'r', encoding='utf-8') as fp:
+                data = json.load(fp)  # 加载json文件
+                for i, shapes in enumerate(data['shapes']):
+                    label = shapes['label']
+                    nums += 1
+    print(nums)
+
 # 更改json文件里的错误标签
 def editJson():
     baseJsonPath = "F:\\阜康测试视频\\14-21\\整理标注文件\\image\\jjc"
@@ -431,7 +474,6 @@ def editJson():
                 newjsonfile = os.path.join(TxtsavePath, jsonname)
                 with open(newjsonfile, 'a') as f:
                     json.dump(data, f, indent=4)
-
 
 # 随机选择1/9个ID做测试集，并保证有特定类别样本
 def getRandID1():
@@ -486,10 +528,15 @@ def getRandID1():
                     copyfile(source_file, target_file)
                     os.remove(source_file)
 
+
+
+
 if __name__ == "__main__":
     # get_smoke()
     # csv2json1()
     # editJson()
     # getRandID1()
-    randSample()
-
+    # randSample()
+    # getJsonNum()
+    # randSample()
+    mergeJson()

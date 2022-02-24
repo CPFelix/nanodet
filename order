@@ -22,5 +22,15 @@ python tools/train.py config/nanodet-plus-m_MobileNetV2_14_320X192_DSM_Dataset_c
 
 python tools/train.py config/nanodet-plus-m_MobileNetV2_14_fpn_320X192_DSM_Dataset_class4_20220211_fukang.yml
 
+python tools/train.py config/nanodet-plus-m_MobileNetV2_124_noAuxHead_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+python tools/train.py config/nanodet-plus-m_MobileNetV2_14_pan_64_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+python tools/train.py config/nanodet-plus-m_MobileNetV2_124_pan_64_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+python tools/train.py config/nanodet-plus-m_ConvNeXt_pan_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
+python tools/train.py config/nanodet-plus-m_MobileNetV2_124_noAuxHead_320X192_DSM_Dataset_class4_20220211_fukang.yml
+
 
 tensorboard --logdir ./
